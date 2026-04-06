@@ -105,14 +105,14 @@ cd local-ai-stack
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ```
-![Install Ollama](/backend/img/install_ollama.png)
+![Install Ollama](/local-ai-stack/backend/img/install_ollama.png)
 
 ### 3. Baixar o modelo
 
 ```bash
 ollama pull qwen3.5:4b
 ```
-![Install Qwen3.5:4b](/backend/img/install_qwen3-5:4b.png)
+![Install Qwen3.5:4b](/local-ai-stack/backend/img/install_qwen3-5:4b.png)
 
 > **Modelos alternativos:** `qwen3.5:9b` (requer 16 GB+ RAM com GPU) · `qwen3.5:2b` (hardware mais limitado)
 
@@ -145,6 +145,7 @@ Um único arquivo inicializa toda a stack automaticamente — Ollama, backend e 
 chmod +x start_all.sh
 bash start_all.sh
 ```
+![Rodando linux_start_all.sh](/backend/img/run_bash.png)
 
 **Windows:**
 ```
@@ -159,6 +160,8 @@ O script realiza automaticamente:
 3. Baixa o modelo `qwen3.5:4b` se ainda não estiver disponível
 4. Cria os ambientes virtuais, instala as dependências e sobe o backend
 5. Instala as dependências e abre o frontend no navegador
+
+![Agente em funcionamento](/backend/img/run_agent.png)
 
 ---
 
