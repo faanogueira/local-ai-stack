@@ -18,6 +18,8 @@
 - [Pré-requisitos](#pré-requisitos)
 - [Instalação](#instalação)
 - [Execução](#execução)
+  - [▶ Execução rápida (recomendado)](#-execução-rápida-recomendado)
+  - [▶ Execução manual](#-execução-manual)
 - [Endpoints da API](#endpoints-da-api)
 - [Requisitos de Hardware](#requisitos-de-hardware)
 - [Estrutura do Projeto](#estrutura-do-projeto)
@@ -132,7 +134,35 @@ pip install -r requirements.txt
 
 ## Execução
 
-Abra **três terminais** e execute em ordem:
+### ▶ Execução rápida (recomendado)
+
+Um único arquivo inicializa toda a stack automaticamente — Ollama, backend e frontend.
+
+**Linux:**
+```bash
+chmod +x start_all.sh
+bash start_all.sh
+```
+
+**Windows:**
+```
+start_all.bat
+```
+> No Windows, o Ollama precisa estar instalado manualmente antes de executar o script.  
+> Download: [ollama.com/download](https://ollama.com/download)
+
+O script realiza automaticamente:
+1. Verifica (e instala, no Linux) o Ollama
+2. Sobe o servidor Ollama em background
+3. Baixa o modelo `qwen3.5:4b` se ainda não estiver disponível
+4. Cria os ambientes virtuais, instala as dependências e sobe o backend
+5. Instala as dependências e abre o frontend no navegador
+
+---
+
+### ▶ Execução manual
+
+Para quem preferir controle total, abra **três terminais** e execute em ordem:
 
 ```bash
 # Terminal 1 — Ollama
@@ -144,6 +174,8 @@ cd backend && bash start.sh
 # Terminal 3 — Frontend
 cd frontend && bash start.sh
 ```
+
+---
 
 | Serviço | URL |
 |---|---|
@@ -196,6 +228,9 @@ curl -X POST http://localhost:8000/chat \
 
 ```
 local-ai-stack/
+├── start_all.sh            # Execução rápida — Linux
+├── start_all.bat           # Execução rápida — Windows
+├── .gitignore
 ├── backend/
 │   ├── api.py              # API FastAPI — endpoints, sessões, streaming
 │   ├── requirements.txt
