@@ -105,12 +105,14 @@ cd local-ai-stack
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ```
+![Install Ollama](/local-ai-stack/backend/img/install_ollama.png)
 
 ### 3. Baixar o modelo
 
 ```bash
 ollama pull qwen3.5:4b
 ```
+![Install Qwen3.5:4b](/local-ai-stack/backend/img/install_qwen3-5:4b.png)
 
 > **Modelos alternativos:** `qwen3.5:9b` (requer 16 GB+ RAM com GPU) · `qwen3.5:2b` (hardware mais limitado)
 
