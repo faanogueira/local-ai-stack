@@ -13,6 +13,9 @@ echo        Local AI Stack — Inicializando
 echo ============================================
 echo.
 
+REM Guarda o diretório raiz
+set ROOT_DIR=%CD%
+
 REM =============================================================================
 REM PASSO 1 — Verificar Ollama instalado
 REM =============================================================================
@@ -45,13 +48,20 @@ if %ERRORLEVEL% EQU 0 (
     echo   Ollama iniciado em background.
 )
 
-echo   Verificando modelo qwen3.5:4b...
-ollama list | findstr "qwen3.5:4b" >nul 2>&1
+REM Verifica modelo otimizado qwen3.5-fast
+echo   Verificando modelo qwen3.5-fast...
+ollama list | findstr "qwen3.5-fast" >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo   Baixando qwen3.5:4b (pode levar alguns minutos)...
-    ollama pull qwen3.5:4b
+    ollama list | findstr "qwen3.5:4b" >nul 2>&1
+    if %ERRORLEVEL% NEQ 0 (
+        echo   Baixando qwen3.5:4b (pode levar alguns minutos)...
+        ollama pull qwen3.5:4b
+    )
+    echo   Criando modelo otimizado qwen3.5-fast...
+    ollama create qwen3.5-fast -f "%ROOT_DIR%\Modelfile"
+    echo   Modelo qwen3.5-fast criado com sucesso.
 ) else (
-    echo   Modelo ja disponivel.
+    echo   Modelo qwen3.5-fast ja disponivel.
 )
 
 REM =============================================================================
@@ -60,26 +70,37 @@ REM ============================================================================
 
 echo [3/4] Iniciando Backend (FastAPI)...
 
-cd backend
+cd "%ROOT_DIR%\backend"
 
 if not exist ".venv" (
     python -m venv .venv
 )
 
-call .venv\Scripts\activate.bat
-pip install -q -r requirements.txt
-start "Backend FastAPI" /min cmd /c "uvicorn api:app --host 0.0.0.0 --port 8000"
-call .venv\Scripts\deactivate.bat
+.venv\Scripts\pip install -q -r requirements.txt
 
-cd ..
-timeout /t 3 /nobreak >nul
+taskkill /f /im uvicorn.exe >nul 2>&1
 
+start "Backend FastAPI" /min cmd /c ".venv\Scripts\uvicorn api:app --host 0.0.0.0 --port 8000"
+
+cd "%ROOT_DIR%"
+
+echo   Aguardando backend inicializar...
+set TRIES=0
+:WAIT_BACKEND
 curl -s http://localhost:8000/health >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    echo   Backend rodando em http://localhost:8000
-) else (
-    echo   Backend pode estar iniciando ainda. Aguarde alguns segundos.
+if %ERRORLEVEL% EQU 0 goto BACKEND_OK
+set /a TRIES+=1
+if %TRIES% GEQ 10 (
+    echo   Backend nao respondeu. Verifique se ha erros no terminal do Backend.
+    goto BACKEND_DONE
 )
+timeout /t 1 /nobreak >nul
+goto WAIT_BACKEND
+
+:BACKEND_OK
+echo   Backend rodando em http://localhost:8000
+
+:BACKEND_DONE
 
 REM =============================================================================
 REM PASSO 4 — Iniciar Frontend
@@ -87,14 +108,13 @@ REM ============================================================================
 
 echo [4/4] Iniciando Frontend (Streamlit)...
 
-cd frontend
+cd "%ROOT_DIR%\frontend"
 
 if not exist ".venv" (
     python -m venv .venv
 )
 
-call .venv\Scripts\activate.bat
-pip install -q -r requirements.txt
+.venv\Scripts\pip install -q -r requirements.txt
 
 echo.
 echo ============================================
@@ -108,8 +128,7 @@ echo.
 echo   Feche esta janela para encerrar o frontend.
 echo.
 
-REM Aguarda o Streamlit subir e abre o navegador
 timeout /t 4 /nobreak >nul
 start "" http://localhost:8501
 
-streamlit run app.py --server.port 8501
+.venv\Scripts\streamlit run app.py --server.port 8501
