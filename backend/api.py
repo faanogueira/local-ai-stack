@@ -29,7 +29,7 @@ from typing import Optional
 # =============================================================================
 
 OLLAMA_BASE_URL = "http://localhost:11434"
-DEFAULT_MODEL   = "qwen3.5:4b"
+DEFAULT_MODEL   = "qwen3.5-fast"   # modelo otimizado para CPU (ver Modelfile na raiz)
 MAX_HISTORY     = 20    # máximo de turnos por sessão (evita context overflow)
 
 logging.basicConfig(
@@ -90,7 +90,7 @@ class ChatRequest(BaseModel):
     model: str                            = Field(default=DEFAULT_MODEL)
     system_prompt: Optional[str]         = Field(default=None)
     temperature: float                    = Field(default=0.7, ge=0.0, le=2.0)
-    max_tokens: int                       = Field(default=2048, ge=64, le=8192)
+    max_tokens: int                       = Field(default=512, ge=64, le=8192)  # reduzido de 2048 para 512
 
 class ChatResponse(BaseModel):
     session_id: str
@@ -198,12 +198,15 @@ async def chat(req: ChatRequest):
     messages   = build_messages(session_id, req.message, req.system_prompt)
 
     payload = {
-        "model":   req.model,
+        "model":    req.model,
         "messages": messages,
-        "stream":  False,
+        "stream":   False,
+        "think":    False,
         "options": {
             "temperature": req.temperature,
             "num_predict": req.max_tokens,
+            "num_ctx":     2048,    # contexto reduzido — melhora velocidade em CPU
+            "num_thread":  8,       # threads do i5-8365U (4 cores / 8 threads)
         },
     }
 
@@ -251,9 +254,12 @@ async def chat_stream(req: ChatRequest):
         "model":    req.model,
         "messages": messages,
         "stream":   True,
+        "think":    False,
         "options": {
             "temperature": req.temperature,
             "num_predict": req.max_tokens,
+            "num_ctx":     2048,    # contexto reduzido — melhora velocidade em CPU
+            "num_thread":  8,       # threads do i5-8365U (4 cores / 8 threads)
         },
     }
 
