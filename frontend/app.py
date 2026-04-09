@@ -333,7 +333,7 @@ with st.sidebar:
         "Max Tokens",
         min_value=256,
         max_value=4096,
-        value=512,
+        value=2048,
         step=256,
         help="Tamanho máximo da resposta gerada.",
     )
@@ -342,7 +342,7 @@ with st.sidebar:
 
     system_prompt = st.text_area(
         label="System Prompt",
-        value="Atue como um cientista de dados sênior: mantenha tom e vocabulário profissionais.",
+        value="Você é um assistente especializado em Ciência de Dados e análise financeira. Responda de forma clara e técnica.",
         height=120,
         label_visibility="collapsed",
         help="Define a personalidade e contexto do modelo.",

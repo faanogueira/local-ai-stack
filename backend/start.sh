@@ -3,7 +3,7 @@
 # start.sh — inicializa o ambiente e sobe o servidor FastAPI
 # =============================================================================
 
-set -e  # encerra se qualquer comando falhar
+set -e
 
 VENV_DIR=".venv"
 PORT=8000
@@ -14,7 +14,6 @@ echo "  Local LLM Chat — Backend"
 echo "============================================"
 echo ""
 
-# Cria o ambiente virtual se não existir
 if [ ! -d "$VENV_DIR" ]; then
     echo "[1/3] Criando ambiente virtual..."
     python3 -m venv "$VENV_DIR"
@@ -22,14 +21,11 @@ else
     echo "[1/3] Ambiente virtual já existe."
 fi
 
-# Ativa o venv
 source "$VENV_DIR/bin/activate"
 
-# Instala as dependências
 echo "[2/3] Instalando dependências..."
 pip install -q -r requirements.txt
 
-# Verifica se o Ollama está rodando
 echo "[3/3] Verificando Ollama..."
 if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
     echo "      Ollama OK."
@@ -41,7 +37,6 @@ else
     echo ""
 fi
 
-# Sobe o servidor
 echo ""
 echo "  Servidor disponível em: http://localhost:$PORT"
 echo "  Documentação (Swagger): http://localhost:$PORT/docs"

@@ -1,7 +1,7 @@
 # 🤖 Local AI Stack
 
 > Stack completa para chat com **LLMs locais** via Ollama — sem cloud, sem custos de API, sem envio de dados externos.  
-> Backend em **FastAPI** · Frontend em **Streamlit** · Modelo padrão: **Qwen3.5:4b**
+> Backend em **FastAPI** · Frontend em **Streamlit** · Modelo padrão: **Qwen3.5-fast** (otimizado para CPU)
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white)
@@ -36,7 +36,7 @@ O **Local AI Stack** é uma aplicação de chat com modelos de linguagem que rod
 | **LLM Runtime** | Ollama | Serve o modelo localmente com API REST |
 | **Backend** | FastAPI + httpx | Gerencia sessões, histórico e roteamento |
 | **Frontend** | Streamlit | Interface de chat com identidade visual customizada |
-| **Modelo padrão** | Qwen3.5:4b | Otimizado para hardware com 16 GB RAM sem GPU |
+| **Modelo padrão** | qwen3.5-fast | Versão otimizada do Qwen3.5:4b para CPU sem GPU |
 
 ---
 
@@ -74,7 +74,7 @@ O **Local AI Stack** é uma aplicação de chat com modelos de linguagem que rod
 │                                                         │
 │              ┌─────────────────┐                        │
 │              │     Ollama      │                        │
-│              │  qwen3.5:4b     │                        │
+│              │  qwen3.5-fast   │                        │
 │              └─────────────────┘                        │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -102,34 +102,52 @@ cd local-ai-stack
 
 ### 2. Instalar o Ollama
 
+**Linux:**
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ```
-![Install Ollama](/backend/img/install_ollama.png)
 
-### 3. Baixar o modelo
+**Windows:** baixe e instale o executável em [ollama.com/download](https://ollama.com/download)
+
+### 3. Baixar o modelo base e criar o modelo otimizado
 
 ```bash
 ollama pull qwen3.5:4b
+ollama create qwen3.5-fast -f Modelfile
 ```
-![Install Qwen3.5:4b](/backend/img/install_qwen3-5:4b.png)
 
-> **Modelos alternativos:** `qwen3.5:9b` (requer 16 GB+ RAM com GPU) · `qwen3.5:2b` (hardware mais limitado)
+> O `Modelfile` está na raiz do repositório e aplica otimizações de velocidade para hardware sem GPU — redução de contexto, threads explícitos e thinking mode desativado.
 
 ### 4. Instalar dependências do backend
 
+**Linux:**
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+**Windows:**
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+```
+
 ### 5. Instalar dependências do frontend
 
+**Linux:**
 ```bash
 cd ../frontend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+**Windows:**
+```bash
+cd ..\frontend
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
 ```
 
 ---
@@ -138,37 +156,36 @@ pip install -r requirements.txt
 
 ### ▶ Execução rápida (recomendado)
 
-Um único arquivo inicializa toda a stack automaticamente — Ollama, backend e frontend.
+Um único arquivo inicializa toda a stack automaticamente — Ollama, modelo, backend e frontend.
 
 **Linux:**
 ```bash
 chmod +x start_all.sh
 bash start_all.sh
 ```
-![Rodando linux_start_all.sh](/backend/img/run_bash.png)
 
 **Windows:**
 ```
 start_all.bat
 ```
+
 > No Windows, o Ollama precisa estar instalado manualmente antes de executar o script.  
 > Download: [ollama.com/download](https://ollama.com/download)
 
 O script realiza automaticamente:
 1. Verifica (e instala, no Linux) o Ollama
 2. Sobe o servidor Ollama em background
-3. Baixa o modelo `qwen3.5:4b` se ainda não estiver disponível
+3. Baixa o `qwen3.5:4b` se necessário e cria o modelo `qwen3.5-fast` via Modelfile
 4. Cria os ambientes virtuais, instala as dependências e sobe o backend
-5. Instala as dependências e abre o frontend no navegador
-
-![Agente em funcionamento](/backend/img/run_agent.png)
+5. Instala as dependências do frontend e abre o navegador automaticamente
 
 ---
 
 ### ▶ Execução manual
 
-Para quem preferir controle total, abra **três terminais** e execute em ordem:
+Abra **três terminais** e execute em ordem:
 
+**Linux:**
 ```bash
 # Terminal 1 — Ollama
 ollama serve
@@ -178,6 +195,20 @@ cd backend && bash start.sh
 
 # Terminal 3 — Frontend
 cd frontend && bash start.sh
+```
+
+**Windows:**
+```bash
+# Terminal 1 — Ollama
+ollama serve
+
+# Terminal 2 — Backend
+cd backend
+.venv\Scripts\uvicorn api:app --host 0.0.0.0 --port 8000
+
+# Terminal 3 — Frontend
+cd frontend
+.venv\Scripts\streamlit run app.py --server.port 8501
 ```
 
 ---
@@ -208,7 +239,7 @@ curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
   -d '{
     "message": "O que é um Large Language Model?",
-    "model": "qwen3.5:4b",
+    "model": "qwen3.5-fast",
     "temperature": 0.7
   }'
 ```
@@ -223,9 +254,9 @@ curl -X POST http://localhost:8000/chat \
 | **CPU** | x86-64 dual-core | Intel i5 8ª geração |
 | **GPU** | Não obrigatória | — |
 | **Armazenamento** | 5 GB livres | SSD recomendado |
-| **SO** | Ubuntu 20.04+ / macOS 12+ | Ubuntu 24.04 LTS |
+| **SO** | Ubuntu 20.04+ / Windows 10+ | Ubuntu 24.04 LTS |
 
-> Sem GPU dedicada, o modelo roda via CPU. No hardware de referência (i5-8365U, 16 GB RAM), o Qwen3.5:4b gera entre 3–8 tokens/segundo — funcional para uso individual.
+> Sem GPU dedicada, o modelo roda via CPU. No hardware de referência (i5-8365U, 16 GB RAM), o `qwen3.5-fast` gera entre 5–12 tokens/segundo — otimizado via Modelfile com contexto reduzido e threads explícitos.
 
 ---
 
@@ -233,6 +264,7 @@ curl -X POST http://localhost:8000/chat \
 
 ```
 local-ai-stack/
+├── Modelfile               # Configuração otimizada do modelo para CPU
 ├── start_all.sh            # Execução rápida — Linux
 ├── start_all.bat           # Execução rápida — Windows
 ├── .gitignore
@@ -257,7 +289,7 @@ local-ai-stack/
 ## Referências
 
 - [Ollama — Documentação oficial](https://ollama.com)
-- [Qwen3.5 — Hugging Face](https://huggingface.co/Qwen/Qwen3.5-397B-A17B)
+- [Qwen3.5 — Hugging Face](https://huggingface.co/Qwen/Qwen3.5-4B)
 - [FastAPI — Documentação](https://fastapi.tiangolo.com)
 - [Streamlit — Documentação](https://docs.streamlit.io)
 

@@ -26,4 +26,4 @@ PARAMETER num_predict 512
 PARAMETER temperature 0.7
 
 # System prompt padrão
-SYSTEM """Você é um assistente generalista especializado em diversos assuntos de acordo com a preferência do usuário. Responda de forma clara, direta e objetiva."""
+SYSTEM """Você é um assistente especializado em Ciência de Dados e análise financeira. Responda de forma clara, direta e objetiva."""
