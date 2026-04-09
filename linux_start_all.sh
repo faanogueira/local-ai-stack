@@ -5,13 +5,15 @@
 #   bash start_all.sh
 # =============================================================================
 
-set -e
+set +e  # Não encerra o script se um comando falhar
 
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
+
+ROOT_DIR=$(pwd)
 
 echo ""
 echo -e "${CYAN}============================================${NC}"
@@ -41,7 +43,8 @@ echo -e "${YELLOW}[2/4] Iniciando servidor Ollama...${NC}"
 if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
     echo -e "${GREEN}  Ollama já está rodando.${NC}"
 else
-    ollama serve &> /tmp/ollama.log &
+    ollama serve > /tmp/ollama.log 2>&1 &
+    disown $!
     sleep 3
     echo -e "${GREEN}  Ollama iniciado em background.${NC}"
 fi
@@ -61,25 +64,38 @@ fi
 
 echo -e "${YELLOW}[3/4] Iniciando Backend (FastAPI)...${NC}"
 
-cd backend
+cd "$ROOT_DIR/backend"
 
 if [ ! -d ".venv" ]; then
     python3 -m venv .venv
 fi
 
-source .venv/bin/activate
-pip install -q -r requirements.txt
-uvicorn api:app --host 0.0.0.0 --port 8000 &> /tmp/backend.log &
-BACKEND_PID=$!
-deactivate
+.venv/bin/pip install -q -r requirements.txt
 
-cd ..
-sleep 2
+# Mata instância anterior se houver
+pkill -f "uvicorn api:app" 2>/dev/null || true
+sleep 1
+
+# Sobe o backend desacoplado do script (nohup + disown)
+nohup .venv/bin/uvicorn api:app --host 0.0.0.0 --port 8000 > /tmp/backend.log 2>&1 &
+disown $!
+
+cd "$ROOT_DIR"
+
+# Aguarda até 10 segundos pelo backend responder
+echo -e "${YELLOW}      Aguardando backend inicializar...${NC}"
+TRIES=0
+until curl -s http://localhost:8000/health > /dev/null 2>&1; do
+    TRIES=$((TRIES + 1))
+    if [ $TRIES -ge 10 ]; then
+        echo -e "${RED}  Backend não respondeu. Verifique /tmp/backend.log${NC}"
+        break
+    fi
+    sleep 1
+done
 
 if curl -s http://localhost:8000/health > /dev/null 2>&1; then
     echo -e "${GREEN}  Backend rodando em http://localhost:8000${NC}"
-else
-    echo -e "${RED}  Backend não respondeu. Verifique /tmp/backend.log${NC}"
 fi
 
 # =============================================================================
@@ -88,7 +104,7 @@ fi
 
 echo -e "${YELLOW}[4/4] Iniciando Frontend (Streamlit)...${NC}"
 
-cd frontend
+cd "$ROOT_DIR/frontend"
 
 if [ ! -d ".venv" ]; then
     python3 -m venv .venv
