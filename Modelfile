@@ -1,0 +1,29 @@
+# =============================================================================
+# Modelfile — qwen3.5-fast
+# Versão otimizada do qwen3.5:4b para CPU sem GPU dedicada
+#
+# Criação:
+#   ollama create qwen3.5-fast -f Modelfile
+#
+# Uso:
+#   ollama run qwen3.5-fast
+# =============================================================================
+
+FROM qwen3.5:4b
+
+# Contexto reduzido — principal responsável pela lentidão em CPU
+# Padrão: 32768 | Otimizado: 2048
+PARAMETER num_ctx 2048
+
+# Número de threads — use o total de threads do processador
+# i5-8365U: 4 cores / 8 threads
+PARAMETER num_thread 8
+
+# Desativa thinking mode diretamente no modelo
+PARAMETER num_predict 512
+
+# Temperature padrão para chat
+PARAMETER temperature 0.7
+
+# System prompt padrão
+SYSTEM """Você é um assistente especializado em Ciência de Dados e análise financeira. Responda de forma clara, direta e objetiva."""
