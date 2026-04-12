@@ -15,7 +15,7 @@ import streamlit as st
 # =============================================================================
 
 BACKEND_URL  = "http://localhost:8000"
-DEFAULT_MODEL = "qwen3.5:4b"
+DEFAULT_MODEL = "qwen3.5-fast"
 
 st.set_page_config(
     page_title="Local AI Stack",
@@ -333,7 +333,7 @@ with st.sidebar:
         "Max Tokens",
         min_value=256,
         max_value=4096,
-        value=2048,
+        value=512,
         step=256,
         help="Tamanho máximo da resposta gerada.",
     )
@@ -342,7 +342,7 @@ with st.sidebar:
 
     system_prompt = st.text_area(
         label="System Prompt",
-        value="Você é um assistente especializado em Ciência de Dados e análise financeira. Responda de forma clara e técnica.",
+        value="Atue como um assistente direto e objetivo: responda sem blocos de raciocínio interno (thinking).",
         height=120,
         label_visibility="collapsed",
         help="Define a personalidade e contexto do modelo.",
