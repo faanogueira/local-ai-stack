@@ -14,21 +14,20 @@ echo ============================================
 echo.
 
 REM =============================================================================
-REM PASSO 1 — Verificar Ollama instalado
+REM PASSO 1 — Preparar Ollama estável (0.1.48)
 REM =============================================================================
 
-echo [1/4] Verificando Ollama...
+echo [1/4] Preparando Ollama estavel (0.1.48)...
+set "OLLAMA_BIN=%ROOT_DIR%backend\ollama.exe"
 
-where ollama >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo   Ollama nao encontrado.
-    echo   Acesse https://ollama.com/download e instale antes de continuar.
-    echo.
-    pause
-    exit /b 1
-) else (
-    echo   Ollama encontrado.
+if not exist "%OLLAMA_BIN%" (
+    echo   Baixando Ollama 0.1.48 para Windows...
+    curl -L https://github.com/ollama/ollama/releases/download/v0.1.48/ollama-windows-amd64.zip -o ollama.zip
+    echo   Extraindo... (requer tar ou powershell)
+    powershell -Command "Expand-Archive -Path ollama.zip -DestinationPath backend -Force"
+    del ollama.zip
 )
+echo   Ollama 0.1.48 pronto.
 
 REM =============================================================================
 REM PASSO 2 — Iniciar servidor Ollama em background
@@ -36,38 +35,51 @@ REM ============================================================================
 
 echo [2/4] Iniciando servidor Ollama...
 
-curl -s http://localhost:11434/api/tags >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    echo   Ollama ja esta rodando.
-) else (
-    start "Ollama Server" /min cmd /c "ollama serve"
-    timeout /t 3 /nobreak >nul
-    echo   Ollama iniciado em background.
+REM Tenta encerrar instancias anteriores para evitar conflitos
+taskkill /F /IM ollama.exe >nul 2>&1
+timeout /t 2 /nobreak >nul
+
+set OLLAMA_HOST=127.0.0.1:11434
+start "Ollama Server" /min "%OLLAMA_BIN%" serve
+
+echo   Aguardando Ollama inicializar...
+:wait_ollama
+timeout /t 1 /nobreak >nul
+curl -s http://127.0.0.1:11434/api/tags >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    set /a count+=1
+    if %count% GTR 15 (
+        echo   Erro: Ollama nao respondeu. Verifique backend\ollama.log
+        exit /b 1
+    )
+    goto wait_ollama
 )
+echo   Ollama iniciado em background.
 
 echo   Verificando modelos Ollama...
 
 REM 1. Garante o modelo base
-ollama list | findstr "qwen3.5:4b" >nul 2>&1
+"%OLLAMA_BIN%" list | findstr "qwen3.5:4b" >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo   Baixando qwen3.5:4b (pode levar alguns minutos)...
-    ollama pull qwen3.5:4b
+    "%OLLAMA_BIN%" pull qwen3.5:4b
 ) else (
     echo   Modelo base qwen3.5:4b disponivel.
 )
 
 REM 2. Cria o modelo otimizado se nao existir
-ollama list | findstr "qwen3.5-fast" >nul 2>&1
+"%OLLAMA_BIN%" list | findstr "qwen3.5-fast" >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     if exist "Modelfile" (
         echo   Criando modelo otimizado qwen3.5-fast...
-        ollama create qwen3.5-fast -f Modelfile
+        "%OLLAMA_BIN%" create qwen3.5-fast -f Modelfile
     ) else (
         echo   Aviso: Modelfile nao encontrado. Pulando criacao do qwen3.5-fast.
     )
 ) else (
     echo   Modelo otimizado qwen3.5-fast disponivel.
 )
+
 
 REM =============================================================================
 REM PASSO 3 — Iniciar Backend em background

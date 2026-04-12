@@ -138,28 +138,24 @@ pip install -r requirements.txt
 
 ### ▶ Execução rápida (recomendado)
 
-Um único arquivo inicializa toda a stack automaticamente — Ollama, backend e frontend.
+Um único arquivo inicializa toda a stack automaticamente — Ollama estável, backend e frontend.
 
 **Linux:**
 ```bash
 chmod +x linux_start_all.sh
 bash linux_start_all.sh
 ```
-![Rodando linux_start_all.sh](/backend/img/run_bash.png)
 
 **Windows:**
+```batch
+windows_start_all.bat
 ```
-start_all.bat
-```
-> No Windows, o Ollama precisa estar instalado manualmente antes de executar o script.  
-> Download: [ollama.com/download](https://ollama.com/download)
 
 O script realiza automaticamente:
-1. Verifica (e instala, no Linux) o Ollama
-2. Sobe o servidor Ollama em background
-3. Baixa o modelo `qwen3.5:4b` se ainda não estiver disponível
-4. Cria os ambientes virtuais, instala as dependências e sobe o backend
-5. Instala as dependências e abre o frontend no navegador
+1. Prepara a versão estável do Ollama (0.1.48) localmente (não afeta o Ollama global do sistema).
+2. Resolve problemas de lentidão de versões recentes (0.20+).
+3. Sobe o servidor Ollama e o modelo `qwen3.5-fast`.
+4. Ativa o **Streaming**, permitindo que você veja as respostas em tempo real.
 
 ![Agente em funcionamento](/backend/img/run_agent.png)
 
@@ -272,6 +268,11 @@ local-ai-stack/
 <a href="https://www.linkedin.com/in/faanogueira/" target="_blank"><img style="padding-right: 10px;" src="https://img.icons8.com/?size=100&id=13930&format=png&color=000000" width="80"></a>
 <a href="https://github.com/faanogueira" target="_blank"><img style="padding-right: 10px;" src="https://img.icons8.com/?size=100&id=AZOZNnY73haj&format=png&color=000000" width="80"></a>
 <a href="https://api.whatsapp.com/send?phone=5571983937557" target="_blank"><img style="padding-right: 10px;" src="https://img.icons8.com/?size=100&id=16713&format=png&color=000000" width="80"></a>
+<a href="mailto:faanogueira@gmail.com"><img style="padding-right: 10px;" src="https://img.icons8.com/?size=100&id=P7UIlhbpWzZm&format=png&color=000000" width="80"></a>
+</p>
+
+---
+=16713&format=png&color=000000" width="80"></a>
 <a href="mailto:faanogueira@gmail.com"><img style="padding-right: 10px;" src="https://img.icons8.com/?size=100&id=P7UIlhbpWzZm&format=png&color=000000" width="80"></a>
 </p>
 
