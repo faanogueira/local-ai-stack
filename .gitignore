@@ -5,3 +5,14 @@ __pycache__/
 
 # Arquivos de sistema
 .DS_Store
+
+# Binários locais do Ollama (OLLAMA_BIN)
+backend/ollama
+backend/ollama.exe
+ollama.zip
+
+# Logs
+backend/backend.log
+backend/ollama.log
+backend/ollama.exe.log
+*.log
