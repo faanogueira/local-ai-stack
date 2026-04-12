@@ -15,6 +15,7 @@ import json
 import httpx
 import asyncio
 import logging
+import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 
@@ -28,9 +29,12 @@ from typing import Optional
 # CONFIGURAÇÃO
 # =============================================================================
 
-OLLAMA_BASE_URL = "http://localhost:11434"
+OLLAMA_BASE_URL = "http://127.0.0.1:11434"
 DEFAULT_MODEL   = "qwen3.5-fast"   # modelo otimizado para CPU (ver Modelfile na raiz)
 MAX_HISTORY     = 20    # máximo de turnos por sessão (evita context overflow)
+
+# Calcula o número de threads ideal (metade dos núcleos lógicos, min 1, max 8)
+CPU_THREADS = max(1, min(8, os.cpu_count() // 2)) if os.cpu_count() else 4
 
 logging.basicConfig(
     level=logging.INFO,
@@ -201,14 +205,14 @@ async def chat(req: ChatRequest):
         "model":    req.model,
         "messages": messages,
         "stream":   False,
-        "think":    False,
         "options": {
             "temperature": req.temperature,
             "num_predict": req.max_tokens,
-            "num_ctx":     2048,    # contexto reduzido — melhora velocidade em CPU
-            "num_thread":  8,       # threads do i5-8365U (4 cores / 8 threads)
+            "num_ctx":     2048,
+            "num_thread":  CPU_THREADS,
         },
     }
+
 
     try:
         async with httpx.AsyncClient(timeout=120) as client:
@@ -254,12 +258,11 @@ async def chat_stream(req: ChatRequest):
         "model":    req.model,
         "messages": messages,
         "stream":   True,
-        "think":    False,
         "options": {
             "temperature": req.temperature,
             "num_predict": req.max_tokens,
-            "num_ctx":     2048,    # contexto reduzido — melhora velocidade em CPU
-            "num_thread":  8,       # threads do i5-8365U (4 cores / 8 threads)
+            "num_ctx":     2048,
+            "num_thread":  CPU_THREADS,
         },
     }
 
