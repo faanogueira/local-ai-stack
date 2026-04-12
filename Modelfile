@@ -15,15 +15,11 @@ FROM qwen3.5:4b
 # Padrão: 32768 | Otimizado: 2048
 PARAMETER num_ctx 2048
 
-# Número de threads — use o total de threads do processador
-# i5-8365U: 4 cores / 8 threads
-PARAMETER num_thread 8
-
 # Desativa thinking mode diretamente no modelo
 PARAMETER num_predict 512
 
 # Temperature padrão para chat
 PARAMETER temperature 0.7
 
-# System prompt padrão
-SYSTEM """Você é um assistente especializado em Ciência de Dados e análise financeira. Responda de forma clara, direta e objetiva."""
+# System prompt padrão otimizado para velocidade
+SYSTEM """Você é um assistente direto e objetivo. NÃO utilize blocos de raciocínio interno (thinking), responda diretamente à pergunta do usuário sem delongas ou explicações desnecessárias."""
