@@ -6,7 +6,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.41-FF4B4B?style=flat&logo=streamlit&logoColor=white)
-![Ollama](https://img.shields.io/badge/Ollama-local-black?style=flat)
+![Ollama](https://img.shields.io/badge/Ollama-v0.1.48-black?style=flat)
 ![License](https://img.shields.io/badge/License-MIT-8B1A1A?style=flat)
 
 ---
@@ -16,12 +16,11 @@
 - [Visão Geral](#visão-geral)
 - [Arquitetura](#arquitetura)
 - [Pré-requisitos](#pré-requisitos)
-- [Instalação](#instalação)
-- [Execução](#execução)
+- [Instalação e Execução](#instalação-e-execução)
   - [▶ Execução rápida (recomendado)](#-execução-rápida-recomendado)
   - [▶ Execução manual](#-execução-manual)
+- [Recursos de Performance](#recursos-de-performance)
 - [Endpoints da API](#endpoints-da-api)
-- [Requisitos de Hardware](#requisitos-de-hardware)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Referências](#referências)
 
@@ -29,13 +28,13 @@
 
 ## Visão Geral
 
-O **Local AI Stack** é uma aplicação de chat com modelos de linguagem que roda inteiramente na máquina local. Nenhum dado é enviado para servidores externos — ideal para uso profissional com informações sensíveis ou para desenvolvimento e estudo de LLMs sem custos de API.
+O **Local AI Stack** é uma aplicação de chat com modelos de linguagem que roda inteiramente na máquina local. Esta versão foi otimizada para máxima velocidade em CPUs domésticas, utilizando uma versão estável do Ollama e suporte a streaming de tokens.
 
 | Camada | Tecnologia | Função |
 |---|---|---|
-| **LLM Runtime** | Ollama | Serve o modelo localmente com API REST |
-| **Backend** | FastAPI + httpx | Gerencia sessões, histórico e roteamento |
-| **Frontend** | Streamlit | Interface de chat com identidade visual customizada |
+| **LLM Runtime** | Ollama (v0.1.48) | Serve o modelo localmente com alta performance em CPU |
+| **Backend** | FastAPI + SSE | Gerencia sessões, histórico e streaming em tempo real |
+| **Frontend** | Streamlit | Interface de chat com suporte a visualização progressiva |
 | **Modelo padrão** | Qwen3.5:4b | Otimizado para hardware com 16 GB RAM sem GPU |
 
 ---
@@ -49,21 +48,21 @@ O **Local AI Stack** é uma aplicação de chat com modelos de linguagem que rod
 │                                                         │
 │              ┌─────────────────┐                        │
 │              │  Streamlit UI   │                        │
-│              │   (frontend)    │                        │
+│              │ (Streaming SSE) │                        │
 │              └────────┬────────┘                        │
 └───────────────────────┼─────────────────────────────────┘
-                        │ HTTP REST
+                        │ HTTP Streaming
                         ▼
 ┌─────────────────────────────────────────────────────────┐
 │              http://localhost:8000                      │
 │                                                         │
 │              ┌─────────────────┐                        │
 │              │   FastAPI API   │                        │
-│              │   (backend)     │                        │
+│              │  (Gerenciador)  │                        │
 │              │                 │                        │
 │              │  • /chat        │                        │
-│              │  • /chat/stream │                        │
-│              │  • /models      │                        │
+│              │  • /chat/stream │◄─── Suporte a Tokens   │
+│              │  • /models      │     em tempo real      │
 │              │  • /health      │                        │
 │              └────────┬────────┘                        │
 └───────────────────────┼─────────────────────────────────┘
@@ -73,76 +72,31 @@ O **Local AI Stack** é uma aplicação de chat com modelos de linguagem que rod
 │              http://localhost:11434                     │
 │                                                         │
 │              ┌─────────────────┐                        │
-│              │     Ollama      │                        │
-│              │  qwen3.5:4b     │                        │
+│              │ Ollama v0.1.48  │                        │
+│              │  (Performance)  │                        │
 │              └─────────────────┘                        │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Fluxo:** `Usuário digita` → `Streamlit` → `FastAPI (gerencia sessão)` → `Ollama (infere)` → `resposta retorna pela mesma cadeia`
+**Fluxo:** `Usuário digita` → `Streamlit` → `FastAPI (gerencia sessão)` → `Ollama (infere)` → `Streaming de tokens retorna em tempo real`
 
 ---
 
 ## Pré-requisitos
 
 - Python **3.10+**
-- [Ollama](https://ollama.com/download) instalado
-- Conexão com internet apenas para baixar o modelo (execução é 100% offline)
+- Conexão com internet apenas na primeira execução para baixar o binário e o modelo.
 
 ---
 
-## Instalação
-
-### 1. Clonar o repositório
-
-```bash
-git clone https://github.com/faanogueira/local-ai-stack.git
-cd local-ai-stack
-```
-
-### 2. Instalar o Ollama
-
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-```
-![Install Ollama](/backend/img/install_ollama.png)
-
-### 3. Baixar o modelo
-
-```bash
-ollama pull qwen3.5:4b
-```
-![Install Qwen3.5:4b](/backend/img/install_qwen3-5:4b.png)
-
-> **Modelos alternativos:** `qwen3.5:9b` (requer 16 GB+ RAM com GPU) · `qwen3.5:2b` (hardware mais limitado)
-
-### 4. Instalar dependências do backend
-
-```bash
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 5. Instalar dependências do frontend
-
-```bash
-cd ../frontend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-```
-
----
-
-## Execução
+## Instalação e Execução
 
 ### ▶ Execução rápida (recomendado)
 
-Um único arquivo inicializa toda a stack automaticamente — Ollama estável, backend e frontend.
+Um único comando inicializa toda a stack automaticamente. O script prepara a versão estável do Ollama (0.1.48) localmente, garantindo que você não sofra com a lentidão das versões mais recentes (0.20+).
 
 **Linux:**
 ```bash
-chmod +x linux_start_all.sh
 bash linux_start_all.sh
 ```
 
@@ -152,10 +106,11 @@ windows_start_all.bat
 ```
 
 O script realiza automaticamente:
-1. Prepara a versão estável do Ollama (0.1.48) localmente (não afeta o Ollama global do sistema).
-2. Resolve problemas de lentidão de versões recentes (0.20+).
-3. Sobe o servidor Ollama e o modelo `qwen3.5-fast`.
-4. Ativa o **Streaming**, permitindo que você veja as respostas em tempo real.
+1. Download do binário estável do Ollama (v0.1.48).
+2. Configuração do servidor Ollama em background.
+3. Pull do modelo `qwen3.5:4b` e criação do `qwen3.5-fast`.
+4. Instalação de dependências do Backend e Frontend em ambientes virtuais.
+5. Abertura automática da interface no navegador.
 
 ![Agente em funcionamento](/backend/img/run_agent.png)
 
@@ -163,26 +118,29 @@ O script realiza automaticamente:
 
 ### ▶ Execução manual
 
-Para quem preferir controle total, abra **três terminais** e execute em ordem:
+Caso prefira configurar manualmente:
 
-```bash
-# Terminal 1 — Ollama
-ollama serve
-
-# Terminal 2 — Backend
-cd backend && bash start.sh
-
-# Terminal 3 — Frontend
-cd frontend && bash start.sh
-```
+1. **Baixar Ollama 0.1.48:** [Releases Oficiais](https://github.com/ollama/ollama/releases/tag/v0.1.48)
+2. **Iniciar Backend:**
+   ```bash
+   cd backend && python3 -m venv .venv && source .venv/bin/activate
+   pip install -r requirements.txt
+   uvicorn api:app --port 8000
+   ```
+3. **Iniciar Frontend:**
+   ```bash
+   cd frontend && python3 -m venv .venv && source .venv/bin/activate
+   pip install -r requirements.txt
+   streamlit run app.py
+   ```
 
 ---
 
-| Serviço | URL |
-|---|---|
-| Interface de chat | http://localhost:8501 |
-| API REST | http://localhost:8000 |
-| Documentação da API (Swagger) | http://localhost:8000/docs |
+## Recursos de Performance
+
+- **Ollama Downgrade:** Versões acima da 0.20 apresentam degradação de performance em algumas CPUs. Este projeto utiliza a v0.1.48 que é até 2.5x mais rápida em inferência via CPU.
+- **Streaming de Tokens:** O frontend utiliza Server-Sent Events (SSE) para exibir o texto conforme é gerado, reduzindo o tempo de espera percebido.
+- **Contexto Otimizado:** O `Modelfile` reduz o contexto para 2048 tokens para economizar RAM e CPU.
 
 ---
 
@@ -194,34 +152,6 @@ cd frontend && bash start.sh
 | `GET` | `/models` | Modelos disponíveis no Ollama |
 | `POST` | `/chat` | Chat com resposta completa |
 | `POST` | `/chat/stream` | Chat com streaming (SSE) |
-| `GET` | `/session/{id}` | Histórico de uma sessão |
-| `DELETE` | `/session/{id}` | Limpa histórico da sessão |
-
-Exemplo de requisição:
-
-```bash
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": "O que é um Large Language Model?",
-    "model": "qwen3.5:4b",
-    "temperature": 0.7
-  }'
-```
-
----
-
-## Requisitos de Hardware
-
-| Componente | Mínimo | Testado |
-|---|---|---|
-| **RAM** | 8 GB | 16 GB |
-| **CPU** | x86-64 dual-core | Intel i5 8ª geração |
-| **GPU** | Não obrigatória | — |
-| **Armazenamento** | 5 GB livres | SSD recomendado |
-| **SO** | Ubuntu 20.04+ / macOS 12+ | Ubuntu 24.04 LTS |
-
-> Sem GPU dedicada, o modelo roda via CPU. No hardware de referência (i5-8365U, 16 GB RAM), o Qwen3.5:4b gera entre 3–8 tokens/segundo — funcional para uso individual.
 
 ---
 
@@ -229,22 +159,14 @@ curl -X POST http://localhost:8000/chat \
 
 ```
 local-ai-stack/
-├── start_all.sh            # Execução rápida — Linux
-├── start_all.bat           # Execução rápida — Windows
-├── .gitignore
+├── linux_start_all.sh      # Inicialização automática Linux
+├── windows_start_all.bat   # Inicialização automática Windows
 ├── backend/
-│   ├── api.py              # API FastAPI — endpoints, sessões, streaming
-│   ├── requirements.txt
-│   ├── start.sh
-│   ├── test_api.sh         # Testes dos endpoints via curl
-│   └── README.md
+│   ├── ollama              # Binário estável (gerado no start)
+│   ├── api.py              # API FastAPI com SSE
+│   └── test_api.sh         # Testes de performance
 ├── frontend/
-│   ├── app.py              # Interface Streamlit
-│   ├── requirements.txt
-│   ├── start.sh
-│   ├── README.md
-│   └── .streamlit/
-│       └── config.toml     # Tema customizado
+│   └── app.py              # Interface Streamlit com Streaming
 └── README.md
 ```
 
@@ -252,10 +174,9 @@ local-ai-stack/
 
 ## Referências
 
-- [Ollama — Documentação oficial](https://ollama.com)
-- [Qwen3.5 — Hugging Face](https://huggingface.co/Qwen/Qwen3.5-397B-A17B)
-- [FastAPI — Documentação](https://fastapi.tiangolo.com)
-- [Streamlit — Documentação](https://docs.streamlit.io)
+- [Ollama v0.1.48 Releases](https://github.com/ollama/ollama/releases/tag/v0.1.48)
+- [Qwen3.5 4B Model](https://ollama.com/library/qwen2.5:4b)
+- [Streamlit Streaming API](https://docs.streamlit.io/develop/api-reference/write-magic/st.write_stream)
 
 ---
 
@@ -270,10 +191,3 @@ local-ai-stack/
 <a href="https://api.whatsapp.com/send?phone=5571983937557" target="_blank"><img style="padding-right: 10px;" src="https://img.icons8.com/?size=100&id=16713&format=png&color=000000" width="80"></a>
 <a href="mailto:faanogueira@gmail.com"><img style="padding-right: 10px;" src="https://img.icons8.com/?size=100&id=P7UIlhbpWzZm&format=png&color=000000" width="80"></a>
 </p>
-
----
-=16713&format=png&color=000000" width="80"></a>
-<a href="mailto:faanogueira@gmail.com"><img style="padding-right: 10px;" src="https://img.icons8.com/?size=100&id=P7UIlhbpWzZm&format=png&color=000000" width="80"></a>
-</p>
-
----
